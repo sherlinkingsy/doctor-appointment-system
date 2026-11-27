@@ -1,0 +1,89 @@
+Table users {
+  id bigint [pk, increment]
+  name varchar(100) [not null]
+  email varchar(150) [not null, unique]
+  password_hash varchar(255) [not null]
+  role varchar(20) [not null, note: 'PATIENT, DOCTOR or ADMIN']
+  age int
+  gender varchar(20)
+  phone varchar(20)
+  created_at datetime
+}
+
+Table specialties {
+  id bigint [pk, increment]
+  name varchar(100) [not null, unique]
+}
+
+Table doctors {
+  id bigint [pk, increment]
+  user_id bigint [not null, unique]
+  specialty_id bigint [not null]
+  experience_years int
+  slot_minutes int [not null, default: 15]
+}
+
+Table symptoms {
+  id bigint [pk, increment]
+  name varchar(100) [not null, unique]
+  base_weight int [not null, note: '1 to 10']
+  is_red_flag boolean [not null, default: false]
+}
+
+Table symptom_specialty {
+  symptom_id bigint [not null]
+  specialty_id bigint [not null]
+  indexes {
+    (symptom_id, specialty_id) [pk]
+  }
+}
+
+Table doctor_availability {
+  id bigint [pk, increment]
+  doctor_id bigint [not null]
+  day_of_week varchar(10) [not null]
+  start_time time [not null]
+  end_time time [not null]
+}
+
+Table doctor_leave {
+  id bigint [pk, increment]
+  doctor_id bigint [not null]
+  leave_date date [not null]
+  indexes {
+    (doctor_id, leave_date) [unique]
+  }
+}
+
+Table appointments {
+  id bigint [pk, increment]
+  patient_id bigint [not null]
+  doctor_id bigint [not null]
+  slot_time datetime [not null]
+  status varchar(20) [not null, note: 'BOOKED, COMPLETED, CANCELLED, NO_SHOW']
+  priority_score int
+  priority_level varchar(20) [note: 'URGENT or ROUTINE']
+  created_at datetime
+  indexes {
+    (doctor_id, slot_time)
+  }
+}
+
+Table appointment_symptoms {
+  id bigint [pk, increment]
+  appointment_id bigint [not null]
+  symptom_id bigint [not null]
+  severity int [not null, note: '1 to 5']
+  duration_days int
+}
+
+Ref: doctors.user_id - users.id
+Ref: doctors.specialty_id > specialties.id
+Ref: symptom_specialty.symptom_id > symptoms.id
+Ref: symptom_specialty.specialty_id > specialties.id
+Ref: doctor_availability.doctor_id > doctors.id
+Ref: doctor_leave.doctor_id > doctors.id
+Ref: appointments.patient_id > users.id
+Ref: appointments.doctor_id > doctors.id
+Ref: appointment_symptoms.appointment_id > appointments.id
+Ref: appointment_symptoms.symptom_id > symptoms.id
